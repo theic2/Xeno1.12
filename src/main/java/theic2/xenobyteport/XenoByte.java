@@ -13,8 +13,9 @@ public class XenoByte {
 
     }
 
+    /* For injecting... */
     public XenoByte(int code) {
-        init(null);
+        if (code == 1337) init(null);
     }
 
     @Mod.EventHandler
