@@ -1,0 +1,133 @@
+buildscript {
+    repositories {
+        maven { url = 'https://files.minecraftforge.net/maven' }
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+		classpath('com.guardsquare:proguard-gradle:7.0.0') {
+			exclude group: 'com.android.tools.build'
+		}
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+
+group = 'forgefuck.team'
+version = '1.0-SNAPSHOT'
+archivesBaseName = 'Xenobyte'
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+
+minecraft {
+    mappings channel: 'stable', version: '39-1.12'
+    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+
+    runs {
+        client {
+            workingDirectory project.file('run/client')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                xenobyte {
+                    source sourceSets.main
+                }
+            }
+            //jvmArgs "-Dfml.coreMods.load=LoadingPlugin"
+        }
+        server {
+            workingDirectory project.file('run/server')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                xenobyte {
+                    source sourceSets.main
+                }
+            }
+            //jvmArgs "-Dfml.coreMods.load=LoadingPlugin"
+            args "nogui"
+        }
+    }
+}
+
+configurations {
+    shade
+    shadeOnly
+    shadeOnly.extendsFrom shade
+    compile.extendsFrom shade
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'sponge'
+        url = 'https://repo.spongepowered.org/maven'
+    }
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2854'
+    // compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
+    // compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
+    // The 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
+    // provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+    // These dependencies get remapped to your current MCP mappings
+    // deobf 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+
+    compileOnly 'org.projectlombok:lombok:1.18.12'
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+}
+
+jar.manifest {
+    attributes "Maven-Artifact": "${group}:${name}:${version}"
+    //attributes "FMLCorePlugin": "LoadingPlugin"
+}
+jar.finalizedBy('obfuscateProGuard')
+def generateString(String alphabet, int n) {
+    return new Random().with {
+        (1..n).collect { alphabet[nextInt(alphabet.length())] }.join()
+    }
+}
+task obfuscateProGuard(type: proguard.gradle.ProGuardTask) {
+    injars "$buildDir/libs/${project.name}-${project.version}.jar"
+    outjars "$buildDir/libs/out-${project.name}-${project.version}.jar"
+    libraryjars "${System.getProperty("java.home")}/lib/rt.jar"
+    libraryjars "${System.getProperty("java.home")}/lib/jce.jar"
+    libraryjars sourceSets.main.compileClasspath
+    keepattributes "RuntimeVisibleAnnotations,RuntimeVisibleParameterAnnotations,RuntimeVisibleTypeAnnotations"
+    dontshrink
+    dontoptimize
+	repackageclasses generateString((('i'..'i') + ('I'..'I') + ('j'..'j') + ('l'..'l')).join(), 16)
+	dontwarn
+    ignorewarnings
+    printmapping "$buildDir/libs/proguard-${project.name}-${project.version}.map"
+    keep "class internal.** { *; }"
+	doLast {
+		File from = file("$buildDir/libs/out-${project.name}-${project.version}.jar")
+		File to = file("$buildDir/libs/${project.name}-${project.version}.jar")
+		java.nio.file.Files.deleteIfExists(to.toPath());
+		java.nio.file.Files.move( from.toPath(), to.toPath());
+	}
+}
+obfuscateProGuard.finalizedBy('reobfJar')
+jar {
+    configurations.shadeOnly.each { dep ->
+        from(dep.isDirectory() ? dep : project.zipTree(dep)) {
+            rename 'LICENSE.txt', 'org/spongepowered/LICENSE.txt'
+            exclude 'META-INF/*.SF'
+            exclude 'META-INF/*.RSA'
+            exclude 'META-INF/*.MF'
+            exclude '**/*.html'
+        }
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+    options.incremental = true // one flag, and things will get MUCH faster
+}
+
+defaultTasks 'build'
