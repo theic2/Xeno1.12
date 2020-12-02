@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
+import theic2.xenobyteport.api.Configuration;
 import theic2.xenobyteport.api.Xeno;
 import theic2.xenobyteport.api.config.Cfg;
 import theic2.xenobyteport.api.module.CheatModule;
@@ -19,28 +20,14 @@ import java.util.List;
 import java.util.Map;
 
 public class Config {
-
-    private static final File configDir = new File(System.getProperty("user.home") + "/Xeno1.12");
-    private static final File configFile = new File(configDir, "readme.txt");
-    private static final Gson gson = new GsonBuilder().create();
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private static final FileProvider fileProvider;
     private static ConfigData data = new ConfigData();
     private static Config moduleConfig;
     private static boolean firstStart;
 
     static {
-        if (!configDir.exists()) {
-            configDir.mkdir();
-            firstStart = true;
-        }
-        if (!configFile.exists()) {
-            try {
-                configFile.createNewFile();
-                firstStart = true;
-            } catch (IOException e) {
-            }
-        }
-        fileProvider = new FileProvider(configFile);
+        fileProvider = new FileProvider(Configuration.INSTANCE.getConfig(e -> firstStart = e));
         if (firstStart) {
             save();
         } else {
@@ -178,7 +165,6 @@ public class Config {
     }
 
     public static class ConfigData {
-
         @SerializedName("fakeMODID")
         public String fakeMODID;
         @SerializedName("fakeNAME")
@@ -189,7 +175,7 @@ public class Config {
         Map<String, Map<String, List<String>>> moduleData;
 
         ConfigData() {
-            moduleData = new HashMap<String, Map<String, List<String>>>();
+            moduleData = new HashMap<>();
             fakeVER = Xeno.mod_version;
             fakeNAME = Xeno.mod_name;
             fakeMODID = Xeno.mod_id;

@@ -113,7 +113,7 @@ task obfuscateProGuard(type: proguard.gradle.ProGuardTask) {
     obfuscationdictionary "$buildDir/proguard/fieldmethod-dictionary.txt"
     dontshrink
     dontoptimize
-    repackageclasses generateString((('a'..'z') + ('A'..'Z') + ('0'..'9')).join(), 16)
+    repackageclasses (generateString((('a'..'z') + ('A'..'Z') + ('0'..'9')).join(), 16) + '.' + generateString((('a'..'z') + ('A'..'Z') + ('0'..'9')).join(), 16))
     dontwarn
     dontnote
     ignorewarnings

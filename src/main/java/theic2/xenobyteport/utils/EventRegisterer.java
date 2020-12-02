@@ -5,6 +5,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.eventhandler.*;
+import theic2.xenobyteport.api.Configuration;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -28,7 +29,18 @@ public class EventRegisterer {
         return Reflections.getPrivateValue(EventBus.class, bus, "listeners");
     }
 
-    private static void registerBus(EventBus bus, Object target) {
+    public static void registerBus(EventBus b, Object o) {
+        if (Configuration.INSTANCE.reflectEvents) {
+            registerBusReflective(b, o);
+        } else {
+            ModContainer m = Loader.instance().activeModContainer();
+            Loader.instance().setActiveModContainer(Loader.instance().getMinecraftModContainer());
+            b.register(o);
+            Loader.instance().setActiveModContainer(m);
+        }
+    }
+
+    private static void registerBusReflective(EventBus bus, Object target) {
         Map<Object, ModContainer> listenerOwners = Reflections.getPrivateValue(EventBus.class, bus, "listenerOwners");
         if (getListeners(bus).containsKey(target)) {
             return;

@@ -37,6 +37,7 @@ public class AutoFuckZaloopa extends CheatModule {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean isWorking() {
         try {
             Field mods = MinecraftForge.EVENT_BUS.getClass().getDeclaredField("listenerOwners");
