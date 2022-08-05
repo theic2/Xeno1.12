@@ -30,6 +30,6 @@ jobs:
         mv /home/runner/.gradle/caches/forge_gradle/mcp_repo/de/oceanlabs/mcp/mcp_config/1.12.2/joined/merge/output.jar   /home/runner/work/Xeno1.12/Xeno1.12/Xenobyte1.12.2.jar   
     - uses: actions/upload-artifact@v2
       with:
-        name: Upload File
+        name: Xenobyte
         path: |
           ./Xenobyte1.12.2.jar
